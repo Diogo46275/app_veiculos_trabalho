@@ -2,8 +2,11 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
-/// Limite da API (FastAPI).
-const tamanhoMaxAnexoBytes = 5 * 1024 * 1024;
+/// Limite da API (FastAPI) — RF-011.
+const tamanhoMaxAnexoBytes = 10 * 1024 * 1024;
+
+/// Máximo de anexos por registro (RF-011).
+const maxAnexosPorRegistro = 5;
 
 /// Limite prático de envio — nginx/proxy costuma bloquear acima de ~1 MB (HTTP 413).
 const tamanhoMaxUploadAnexoBytes = 1024 * 1024;
@@ -105,6 +108,36 @@ Future<ArquivoSelecionado?> selecionarImagemAnexo(ImageSource source) async {
   return ArquivoSelecionado(nome: nome, bytes: bytes);
 }
 
+Future<List<ArquivoSelecionado>> selecionarMultiplosAnexos() async {
+  final resultado = await FilePicker.platform.pickFiles(
+    type: FileType.custom,
+    allowedExtensions: const ['pdf', 'jpg', 'jpeg', 'png'],
+    withData: true,
+    allowMultiple: true,
+  );
+
+  if (resultado == null || resultado.files.isEmpty) {
+    return const [];
+  }
+
+  final selecionados = <ArquivoSelecionado>[];
+  for (final arquivo in resultado.files) {
+    final bytes = arquivo.bytes;
+    final nome = arquivo.name.trim();
+    if (bytes == null || bytes.isEmpty || nome.isEmpty) continue;
+
+    _validarExtensao(nome, extensoesAnexo, 'Use PDF, JPG ou PNG.');
+    _validarTamanho(
+      bytes.length,
+      tamanhoMaxAnexoBytes,
+      'Arquivo maior que 10 MB.',
+    );
+    _validarTamanhoUpload(bytes.length);
+    selecionados.add(ArquivoSelecionado(nome: nome, bytes: bytes));
+  }
+  return selecionados;
+}
+
 Future<ArquivoSelecionado?> selecionarPdfAnexo() async {
   final resultado = await FilePicker.platform.pickFiles(
     type: FileType.custom,
@@ -127,7 +160,7 @@ Future<ArquivoSelecionado?> selecionarPdfAnexo() async {
   }
 
   _validarExtensao(nome, const ['pdf'], 'Use PDF.');
-  _validarTamanho(bytes.length, tamanhoMaxAnexoBytes, 'PDF maior que 5 MB.');
+  _validarTamanho(bytes.length, tamanhoMaxAnexoBytes, 'PDF maior que 10 MB.');
   _validarTamanhoUpload(bytes.length);
 
   return ArquivoSelecionado(nome: nome, bytes: bytes);

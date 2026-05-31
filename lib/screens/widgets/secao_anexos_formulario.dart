@@ -21,7 +21,7 @@ class SecaoAnexosFormulario extends StatelessWidget {
     required this.onRemoverUrlLegado,
     required this.onRemoverNovo,
     this.ajuda =
-        'Tire foto ou anexe PDF. Você pode incluir vários anexos. '
+        'Tire foto ou anexe PDF/imagem (até $maxAnexosPorRegistro por seção, 10 MB cada). '
         'Toque em um anexo para abrir. Fotos são comprimidas para envio.',
   });
 

@@ -182,9 +182,28 @@ class _FormAbastecimentoScreenState extends State<FormAbastecimentoScreen> {
     }
   }
 
+  Future<void> _adicionarAnexosNf(List<ArquivoSelecionado> arquivos) async {
+    if (!mounted || arquivos.isEmpty) return;
+    if (excedeLimiteAnexos(
+      _anexosNfAtuais,
+      idsRemover: _idsRemoverNf,
+      urlsRemover: _urlsRemoverNf,
+      arquivosNovos: _arquivosNovosNf.length,
+      adicionar: arquivos.length,
+    )) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Máximo de $maxAnexosPorRegistro anexos por registro.'),
+        ),
+      );
+      return;
+    }
+    setState(() => _arquivosNovosNf.addAll(arquivos));
+  }
+
   Future<void> _adicionarAnexoNf(ArquivoSelecionado? arquivo) async {
-    if (!mounted || arquivo == null) return;
-    setState(() => _arquivosNovosNf.add(arquivo));
+    if (arquivo == null) return;
+    await _adicionarAnexosNf([arquivo]);
   }
 
   Future<void> _tratarErroAnexo(SelecaoArquivoException error) async {
@@ -204,7 +223,7 @@ class _FormAbastecimentoScreenState extends State<FormAbastecimentoScreen> {
 
   Future<void> _escolherOutroNf() async {
     try {
-      await _adicionarAnexoNf(await escolherAnexoComDialog(context));
+      await _adicionarAnexosNf(await selecionarMultiplosAnexos());
     } on SelecaoArquivoException catch (error) {
       await _tratarErroAnexo(error);
     }

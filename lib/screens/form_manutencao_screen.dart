@@ -239,39 +239,73 @@ class _FormManutencaoScreenState extends State<FormManutencaoScreen> {
   Future<void> _tirarFotoNf() async {
     await _anexarImagem(
       source: ImageSource.camera,
+      anexosAtuais: _anexosNfAtuais,
+      idsRemover: _idsRemoverNf,
+      urlsRemover: _urlsRemoverNf,
+      arquivosNovos: _arquivosNovosNf,
       onSelecionado: (arquivo) => setState(() => _arquivosNovosNf.add(arquivo)),
     );
   }
 
   Future<void> _escolherOutroNf() async {
-    await _anexarDialog(
-      onSelecionado: (arquivo) => setState(() => _arquivosNovosNf.add(arquivo)),
+    await _anexarArquivos(
+      anexosAtuais: _anexosNfAtuais,
+      idsRemover: _idsRemoverNf,
+      urlsRemover: _urlsRemoverNf,
+      arquivosNovos: _arquivosNovosNf,
+      onSelecionados: (arquivos) =>
+          setState(() => _arquivosNovosNf.addAll(arquivos)),
     );
   }
 
   Future<void> _tirarFotoGarantia() async {
     await _anexarImagem(
       source: ImageSource.camera,
+      anexosAtuais: _anexosGarantiaAtuais,
+      idsRemover: _idsRemoverGarantia,
+      urlsRemover: _urlsRemoverGarantia,
+      arquivosNovos: _arquivosNovosGarantia,
       onSelecionado: (arquivo) =>
           setState(() => _arquivosNovosGarantia.add(arquivo)),
     );
   }
 
   Future<void> _escolherOutroGarantia() async {
-    await _anexarDialog(
-      onSelecionado: (arquivo) =>
-          setState(() => _arquivosNovosGarantia.add(arquivo)),
+    await _anexarArquivos(
+      anexosAtuais: _anexosGarantiaAtuais,
+      idsRemover: _idsRemoverGarantia,
+      urlsRemover: _urlsRemoverGarantia,
+      arquivosNovos: _arquivosNovosGarantia,
+      onSelecionados: (arquivos) =>
+          setState(() => _arquivosNovosGarantia.addAll(arquivos)),
     );
   }
 
-  Future<void> _anexarImagem({
-    required ImageSource source,
-    required void Function(ArquivoSelecionado arquivo) onSelecionado,
+  Future<void> _anexarArquivos({
+    required List<AnexoRegistro> anexosAtuais,
+    required Set<int> idsRemover,
+    required Set<String> urlsRemover,
+    required List<ArquivoSelecionado> arquivosNovos,
+    required void Function(List<ArquivoSelecionado> arquivos) onSelecionados,
   }) async {
     try {
-      final arquivo = await selecionarImagemAnexo(source);
-      if (!mounted || arquivo == null) return;
-      onSelecionado(arquivo);
+      final selecionados = await selecionarMultiplosAnexos();
+      if (!mounted || selecionados.isEmpty) return;
+      if (excedeLimiteAnexos(
+        anexosAtuais,
+        idsRemover: idsRemover,
+        urlsRemover: urlsRemover,
+        arquivosNovos: arquivosNovos.length,
+        adicionar: selecionados.length,
+      )) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Máximo de $maxAnexosPorRegistro anexos por registro.'),
+          ),
+        );
+        return;
+      }
+      onSelecionados(selecionados);
     } on SelecaoArquivoException catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -280,12 +314,30 @@ class _FormManutencaoScreenState extends State<FormManutencaoScreen> {
     }
   }
 
-  Future<void> _anexarDialog({
+  Future<void> _anexarImagem({
+    required ImageSource source,
+    required List<AnexoRegistro> anexosAtuais,
+    required Set<int> idsRemover,
+    required Set<String> urlsRemover,
+    required List<ArquivoSelecionado> arquivosNovos,
     required void Function(ArquivoSelecionado arquivo) onSelecionado,
   }) async {
     try {
-      final arquivo = await escolherAnexoComDialog(context);
+      final arquivo = await selecionarImagemAnexo(source);
       if (!mounted || arquivo == null) return;
+      if (excedeLimiteAnexos(
+        anexosAtuais,
+        idsRemover: idsRemover,
+        urlsRemover: urlsRemover,
+        arquivosNovos: arquivosNovos.length,
+      )) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Máximo de $maxAnexosPorRegistro anexos por registro.'),
+          ),
+        );
+        return;
+      }
       onSelecionado(arquivo);
     } on SelecaoArquivoException catch (error) {
       if (!mounted) return;

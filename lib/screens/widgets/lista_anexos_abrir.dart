@@ -78,6 +78,17 @@ class ListaAnexosAbrir extends StatelessWidget {
   }
 }
 
+IconData _iconeAnexo(String rotulo) {
+  final lower = rotulo.toLowerCase();
+  if (lower.endsWith('.pdf')) return Icons.picture_as_pdf_outlined;
+  if (lower.endsWith('.jpg') ||
+      lower.endsWith('.jpeg') ||
+      lower.endsWith('.png')) {
+    return Icons.image_outlined;
+  }
+  return Icons.description_outlined;
+}
+
 class _LinhaAnexo extends StatelessWidget {
   const _LinhaAnexo({
     required this.rotulo,
@@ -115,7 +126,9 @@ class _LinhaAnexo extends StatelessWidget {
             child: Row(
               children: [
                 Icon(
-                  ehNovo ? Icons.upload_file_outlined : Icons.description_outlined,
+                  ehNovo
+                      ? Icons.upload_file_outlined
+                      : _iconeAnexo(rotulo),
                   color: AppColors.blueText,
                 ),
                 const SizedBox(width: 12),

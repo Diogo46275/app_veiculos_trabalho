@@ -1,5 +1,6 @@
 import '../models/anexo_registro.dart';
 import 'anexo_url.dart';
+import 'seletor_arquivo.dart';
 
 List<AnexoRegistro> combinarAnexosParaExibicao({
   required List<AnexoRegistro> anexos,
@@ -27,12 +28,16 @@ List<AnexoRegistro> combinarAnexosParaExibicao({
   return lista;
 }
 
-/// Rotulo amigável para exibição de anexo (índice + nome do arquivo).
+/// Rotulo amigável para exibição de anexo (nome original ou URL).
 String rotuloAnexo(AnexoRegistro anexo, int indice) {
+  final nome = anexo.nomeOriginal?.trim();
+  if (nome != null && nome.isNotEmpty) {
+    return nome;
+  }
   final url = anexo.url;
-  final nome = url.split('/').where((p) => p.isNotEmpty).lastOrNull;
-  if (nome != null && nome.contains('.')) {
-    return 'Anexo ${indice + 1} — $nome';
+  final nomeUrl = url.split('/').where((p) => p.isNotEmpty).lastOrNull;
+  if (nomeUrl != null && nomeUrl.contains('.')) {
+    return 'Anexo ${indice + 1} — $nomeUrl';
   }
   return 'Anexo ${indice + 1}';
 }
@@ -90,4 +95,35 @@ bool todosAnexosMarcadosRemover(
       urlsRemover: urlsRemover,
     ),
   );
+}
+
+int totalAnexosVisiveis(
+  List<AnexoRegistro> anexos, {
+  required Set<int> idsRemover,
+  required Set<String> urlsRemover,
+  required int arquivosNovos,
+}) {
+  return anexosVisiveisEdicao(
+        anexos,
+        idsRemover: idsRemover,
+        urlsRemover: urlsRemover,
+      ).length +
+      arquivosNovos;
+}
+
+bool excedeLimiteAnexos(
+  List<AnexoRegistro> anexos, {
+  required Set<int> idsRemover,
+  required Set<String> urlsRemover,
+  required int arquivosNovos,
+  int adicionar = 1,
+}) {
+  return totalAnexosVisiveis(
+        anexos,
+        idsRemover: idsRemover,
+        urlsRemover: urlsRemover,
+        arquivosNovos: arquivosNovos,
+      ) +
+          adicionar >
+      maxAnexosPorRegistro;
 }
