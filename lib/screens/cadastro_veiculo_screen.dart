@@ -6,6 +6,9 @@ import '../models/categoria_veiculo.dart';
 import '../providers/dashboard_provider.dart';
 import '../providers/veiculos_provider.dart';
 import '../theme/app_colors.dart';
+import '../validacao/mensagens_validacao.dart';
+import '../validacao/validadores_formulario.dart';
+import 'widgets/botao_ir_dashboard.dart';
 
 class CadastroVeiculoScreen extends StatefulWidget {
   const CadastroVeiculoScreen({super.key});
@@ -70,7 +73,9 @@ class _CadastroVeiculoScreenState extends State<CadastroVeiculoScreen> {
 
     if (!(_formKey.currentState?.validate() ?? false)) return;
     if (_categoria == null) {
-      setState(() => _erroGeral = 'Selecione a categoria do veículo.');
+      setState(
+        () => _erroGeral = MensagensValidacao.categoriaObrigatoria,
+      );
       return;
     }
 
@@ -108,6 +113,7 @@ class _CadastroVeiculoScreenState extends State<CadastroVeiculoScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Novo veículo'),
+        actions: acoesAppBarComDashboard(const []),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -161,10 +167,7 @@ class _CadastroVeiculoScreenState extends State<CadastroVeiculoScreen> {
                 onChanged: isSaving
                     ? null
                     : (valor) => setState(() => _categoria = valor),
-                validator: (value) {
-                  if (value == null) return 'Categoria é obrigatória';
-                  return null;
-                },
+                validator: validarCategoriaVeiculo,
               ),
               const SizedBox(height: 16),
               TextFormField(
@@ -173,13 +176,9 @@ class _CadastroVeiculoScreenState extends State<CadastroVeiculoScreen> {
                 textInputAction: TextInputAction.next,
                 textCapitalization: TextCapitalization.words,
                 enabled: !isSaving,
+                maxLength: 60,
                 decoration: const InputDecoration(labelText: 'Marca *'),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Marca é obrigatória';
-                  }
-                  return null;
-                },
+                validator: validarMarca,
                 onFieldSubmitted: (_) => _modeloFocus.requestFocus(),
               ),
               const SizedBox(height: 16),
@@ -189,13 +188,9 @@ class _CadastroVeiculoScreenState extends State<CadastroVeiculoScreen> {
                 textInputAction: TextInputAction.next,
                 textCapitalization: TextCapitalization.words,
                 enabled: !isSaving,
+                maxLength: 60,
                 decoration: const InputDecoration(labelText: 'Modelo *'),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Modelo é obrigatório';
-                  }
-                  return null;
-                },
+                validator: validarModelo,
                 onFieldSubmitted: (_) => _placaFocus.requestFocus(),
               ),
               const SizedBox(height: 16),
@@ -205,13 +200,9 @@ class _CadastroVeiculoScreenState extends State<CadastroVeiculoScreen> {
                 textInputAction: TextInputAction.next,
                 textCapitalization: TextCapitalization.characters,
                 enabled: !isSaving,
+                maxLength: 8,
                 decoration: const InputDecoration(labelText: 'Placa *'),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Placa é obrigatória';
-                  }
-                  return null;
-                },
+                validator: validarPlaca,
                 onFieldSubmitted: (_) => _anoFocus.requestFocus(),
               ),
               const SizedBox(height: 16),
@@ -226,17 +217,7 @@ class _CadastroVeiculoScreenState extends State<CadastroVeiculoScreen> {
                   labelText: 'Ano',
                   hintText: 'Opcional',
                 ),
-                validator: (value) {
-                  final texto = value?.trim() ?? '';
-                  if (texto.isEmpty) return null;
-                  final ano = int.tryParse(texto);
-                  if (ano == null) return 'Informe um ano válido';
-                  final maxAno = DateTime.now().year + 1;
-                  if (ano < 1900 || ano > maxAno) {
-                    return 'Ano deve estar entre 1900 e $maxAno';
-                  }
-                  return null;
-                },
+                validator: validarAnoVeiculo,
                 onFieldSubmitted: (_) => _kmFocus.requestFocus(),
               ),
               const SizedBox(height: 16),
@@ -248,15 +229,7 @@ class _CadastroVeiculoScreenState extends State<CadastroVeiculoScreen> {
                 inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                 enabled: !isSaving,
                 decoration: const InputDecoration(labelText: 'Km atual *'),
-                validator: (value) {
-                  final texto = value?.trim() ?? '';
-                  if (texto.isEmpty) return 'Km atual é obrigatório';
-                  final km = int.tryParse(texto);
-                  if (km == null || km < 0) {
-                    return 'Informe um km válido (≥ 0)';
-                  }
-                  return null;
-                },
+                validator: validarKmVeiculo,
                 onFieldSubmitted: (_) => _submit(),
               ),
               if (_erroGeral != null) ...[

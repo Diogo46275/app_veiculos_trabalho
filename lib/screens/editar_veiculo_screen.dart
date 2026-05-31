@@ -7,6 +7,8 @@ import '../models/veiculo.dart';
 import '../providers/dashboard_provider.dart';
 import '../providers/veiculos_provider.dart';
 import '../theme/app_colors.dart';
+import '../validacao/validadores_formulario.dart';
+import 'widgets/botao_ir_dashboard.dart';
 
 class EditarVeiculoScreen extends StatefulWidget {
   const EditarVeiculoScreen({
@@ -116,6 +118,9 @@ class _EditarVeiculoScreenState extends State<EditarVeiculoScreen> {
         appBar: AppBar(
           title: Text(obrigatorio ? 'Completar cadastro' : 'Editar veículo'),
           automaticallyImplyLeading: !obrigatorio,
+          actions: obrigatorio
+              ? null
+              : acoesAppBarComDashboard(const []),
         ),
         body: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
@@ -192,49 +197,34 @@ class _EditarVeiculoScreenState extends State<EditarVeiculoScreen> {
                   onChanged: isSaving
                       ? null
                       : (valor) => setState(() => _categoria = valor),
-                  validator: (value) {
-                    if (value == null) return 'Categoria é obrigatória';
-                    return null;
-                  },
+                  validator: validarCategoriaVeiculo,
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _marcaController,
                   textCapitalization: TextCapitalization.words,
                   enabled: !isSaving,
+                  maxLength: 60,
                   decoration: const InputDecoration(labelText: 'Marca *'),
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Marca é obrigatória';
-                    }
-                    return null;
-                  },
+                  validator: validarMarca,
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _modeloController,
                   textCapitalization: TextCapitalization.words,
                   enabled: !isSaving,
+                  maxLength: 60,
                   decoration: const InputDecoration(labelText: 'Modelo *'),
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Modelo é obrigatório';
-                    }
-                    return null;
-                  },
+                  validator: validarModelo,
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _placaController,
                   textCapitalization: TextCapitalization.characters,
                   enabled: !isSaving,
+                  maxLength: 8,
                   decoration: const InputDecoration(labelText: 'Placa *'),
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Placa é obrigatória';
-                    }
-                    return null;
-                  },
+                  validator: validarPlaca,
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
@@ -246,17 +236,7 @@ class _EditarVeiculoScreenState extends State<EditarVeiculoScreen> {
                     labelText: 'Ano',
                     hintText: 'Opcional',
                   ),
-                  validator: (value) {
-                    final texto = value?.trim() ?? '';
-                    if (texto.isEmpty) return null;
-                    final ano = int.tryParse(texto);
-                    if (ano == null) return 'Informe um ano válido';
-                    final maxAno = DateTime.now().year + 1;
-                    if (ano < 1900 || ano > maxAno) {
-                      return 'Ano deve estar entre 1900 e $maxAno';
-                    }
-                    return null;
-                  },
+                  validator: validarAnoVeiculo,
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
@@ -265,15 +245,7 @@ class _EditarVeiculoScreenState extends State<EditarVeiculoScreen> {
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   enabled: !isSaving,
                   decoration: const InputDecoration(labelText: 'Km atual *'),
-                  validator: (value) {
-                    final texto = value?.trim() ?? '';
-                    if (texto.isEmpty) return 'Km atual é obrigatório';
-                    final km = int.tryParse(texto);
-                    if (km == null || km < 0) {
-                      return 'Informe um km válido (≥ 0)';
-                    }
-                    return null;
-                  },
+                  validator: validarKmVeiculo,
                 ),
                 if (_erroGeral != null) ...[
                   const SizedBox(height: 16),

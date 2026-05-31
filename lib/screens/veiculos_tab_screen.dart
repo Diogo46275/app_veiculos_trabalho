@@ -6,24 +6,58 @@ import '../models/veiculo.dart';
 import '../providers/dashboard_provider.dart';
 import '../providers/veiculos_provider.dart';
 import '../theme/app_colors.dart';
+import 'widgets/botao_ir_dashboard.dart';
+import 'cadastro_veiculo_screen.dart';
 import 'editar_veiculo_screen.dart';
 import 'veiculo_detalhe_screen.dart';
 import 'widgets/veiculo_swipe_tile.dart';
 
 class VeiculosTabScreen extends StatefulWidget {
-  const VeiculosTabScreen({super.key});
+  const VeiculosTabScreen({super.key, this.visivel = true});
+
+  final bool visivel;
 
   @override
   State<VeiculosTabScreen> createState() => _VeiculosTabScreenState();
 }
 
 class _VeiculosTabScreenState extends State<VeiculosTabScreen> {
+  bool _executarDescobertaSwipe = false;
+
   @override
   void initState() {
     super.initState();
+    if (widget.visivel) {
+      _executarDescobertaSwipe = true;
+    }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<VeiculosProvider>().load();
     });
+  }
+
+  @override
+  void didUpdateWidget(covariant VeiculosTabScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.visivel && !oldWidget.visivel) {
+      _ativarDescobertaSwipe();
+    }
+  }
+
+  void _ativarDescobertaSwipe() {
+    if (!mounted) return;
+    setState(() => _executarDescobertaSwipe = false);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      setState(() => _executarDescobertaSwipe = true);
+    });
+  }
+
+  void _cadastrarVeiculo() {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => const CadastroVeiculoScreen(),
+      ),
+    );
   }
 
   void _editarVeiculo(Veiculo veiculo) {
@@ -93,6 +127,7 @@ class _VeiculosTabScreenState extends State<VeiculosTabScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Veículos'),
+        actions: acoesAppBarComDashboard(const []),
       ),
       body: _buildBody(provider),
     );
@@ -151,7 +186,7 @@ class _VeiculosTabScreenState extends State<VeiculosTabScreen> {
                     if (provider.veiculos.isNotEmpty) ...[
                       const SizedBox(height: 4),
                       const Text(
-                        'Deslize ← para editar ou excluir · → para editar',
+                        'Deslize → editar/excluir · ← gestão',
                         style: TextStyle(
                           color: AppColors.textSecondary,
                           fontSize: 12,
@@ -183,17 +218,32 @@ class _VeiculosTabScreenState extends State<VeiculosTabScreen> {
               ),
             ),
           if (provider.veiculos.isEmpty)
-            const SliverFillRemaining(
+            SliverFillRemaining(
               hasScrollBody: false,
               child: Center(
                 child: Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Text(
-                    'Nenhum registro encontrado',
-                    style: TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 16,
-                    ),
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text(
+                        'Nenhum veículo cadastrado',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 16,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      SizedBox(
+                        height: 44,
+                        child: ElevatedButton.icon(
+                          onPressed: _cadastrarVeiculo,
+                          icon: const Icon(Icons.add),
+                          label: const Text('Cadastrar primeiro veículo'),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -207,11 +257,23 @@ class _VeiculosTabScreenState extends State<VeiculosTabScreen> {
                     const SizedBox(height: 12),
                 itemBuilder: (context, index) {
                   final veiculo = provider.veiculos[index];
+                  final total = provider.veiculos.length;
                   return VeiculoSwipeTile(
                     veiculo: veiculo,
                     onTap: () => _abrirVeiculo(veiculo),
                     onEdit: () => _editarVeiculo(veiculo),
                     onConfirmDelete: () => _excluirVeiculo(veiculo),
+                    executarDescoberta:
+                        _executarDescobertaSwipe && provider.carregado,
+                    mostrarAmbasDirecoes: index == 0,
+                    atrasoDescoberta: Duration(milliseconds: index * 80),
+                    onDescobertaConcluida: index == total - 1
+                        ? () {
+                            if (mounted) {
+                              setState(() => _executarDescobertaSwipe = false);
+                            }
+                          }
+                        : null,
                   );
                 },
               ),

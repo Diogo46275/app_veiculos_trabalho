@@ -81,6 +81,21 @@ abstract final class AppTheme {
         backgroundColor: AppColors.card,
         contentTextStyle: TextStyle(color: AppColors.textPrimary),
       ),
+      tabBarTheme: const TabBarThemeData(
+        labelColor: AppColors.textPrimary,
+        unselectedLabelColor: Color(0x99E0E0F0),
+        indicatorColor: AppColors.gold,
+        indicatorSize: TabBarIndicatorSize.tab,
+        dividerColor: AppColors.border,
+        labelStyle: TextStyle(
+          fontWeight: FontWeight.w700,
+          fontSize: 14,
+        ),
+        unselectedLabelStyle: TextStyle(
+          fontWeight: FontWeight.w400,
+          fontSize: 14,
+        ),
+      ),
     );
   }
 }

@@ -10,9 +10,11 @@ void main() {
     await tester.pumpWidget(
       ChangeNotifierProvider(
         create: (_) => LoginProvider(),
-        child: const MaterialApp(home: LoginScreen()),
+        child: const MaterialApp(home: LoginScreen(pularIntro: true)),
       ),
     );
+
+    await tester.pump();
 
     expect(find.text('E-mail'), findsOneWidget);
     expect(find.text('Senha'), findsOneWidget);

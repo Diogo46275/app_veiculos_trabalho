@@ -13,9 +13,11 @@ class LoginProvider extends ChangeNotifier {
 
   LoginStatus _status = LoginStatus.idle;
   String? _errorMessage;
+  String? _errorCampo;
 
   LoginStatus get status => _status;
   String? get errorMessage => _errorMessage;
+  String? get errorCampo => _errorCampo;
   bool get isLoading => _status == LoginStatus.loading;
 
   Future<bool> login({
@@ -24,6 +26,7 @@ class LoginProvider extends ChangeNotifier {
   }) async {
     _status = LoginStatus.loading;
     _errorMessage = null;
+    _errorCampo = null;
     notifyListeners();
 
     try {
@@ -35,6 +38,7 @@ class LoginProvider extends ChangeNotifier {
     } on AuthException catch (error) {
       _status = LoginStatus.error;
       _errorMessage = error.message;
+      _errorCampo = error.campo;
       notifyListeners();
       return false;
     } catch (_) {
@@ -46,8 +50,9 @@ class LoginProvider extends ChangeNotifier {
   }
 
   void clearError() {
-    if (_errorMessage == null) return;
+    if (_errorMessage == null && _errorCampo == null) return;
     _errorMessage = null;
+    _errorCampo = null;
     if (_status == LoginStatus.error) {
       _status = LoginStatus.idle;
     }

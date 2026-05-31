@@ -8,15 +8,17 @@ class DashboardIndicatorCard extends StatelessWidget {
     required this.titulo,
     required this.valor,
     required this.corValor,
+    this.onTap,
   });
 
   final String titulo;
   final String valor;
   final Color corValor;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final child = Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -41,6 +43,17 @@ class DashboardIndicatorCard extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+
+    if (onTap == null) return child;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: child,
       ),
     );
   }

@@ -3,27 +3,55 @@ import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:provider/provider.dart';
 
 import '../models/veiculo.dart';
+import '../providers/alertas_provider.dart';
 import '../providers/dashboard_provider.dart';
 import '../providers/veiculos_provider.dart';
 import '../theme/app_colors.dart';
+import 'central_alertas_screen.dart';
 import 'editar_veiculo_screen.dart';
 import 'veiculo_detalhe_screen.dart';
+import 'widgets/botao_central_alertas.dart';
 import 'widgets/dashboard_indicator_card.dart';
 import 'widgets/veiculo_swipe_tile.dart';
 
 class DashboardScreen extends StatefulWidget {
-  const DashboardScreen({super.key});
+  const DashboardScreen({super.key, this.visivel = true});
+
+  final bool visivel;
 
   @override
   State<DashboardScreen> createState() => _DashboardScreenState();
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
+  bool _executarDescobertaSwipe = false;
+
   @override
   void initState() {
     super.initState();
+    if (widget.visivel) {
+      _executarDescobertaSwipe = true;
+    }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<DashboardProvider>().load();
+      context.read<AlertasProvider>().sincronizar(notificar: true);
+    });
+  }
+
+  @override
+  void didUpdateWidget(covariant DashboardScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.visivel && !oldWidget.visivel) {
+      _ativarDescobertaSwipe();
+    }
+  }
+
+  void _ativarDescobertaSwipe() {
+    if (!mounted) return;
+    setState(() => _executarDescobertaSwipe = false);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      setState(() => _executarDescobertaSwipe = true);
     });
   }
 
@@ -94,9 +122,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return 'R\$ $texto';
   }
 
+  void _abrirCentralAlertas() {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(builder: (_) => const CentralAlertasScreen()),
+    );
+  }
+
+  String _rotuloAlertas(AlertasProvider alertas) {
+    if (alertas.totalPendentes == 0) return '0';
+    final partes = <String>[];
+    if (alertas.totalVencidos > 0) {
+      partes.add('${alertas.totalVencidos} venc.');
+    }
+    if (alertas.totalProximos > 0) {
+      partes.add('${alertas.totalProximos} próx.');
+    }
+    return partes.join(' · ');
+  }
+
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<DashboardProvider>();
+    final alertas = context.watch<AlertasProvider>();
 
     if (provider.isLoading && provider.dashboard == null) {
       return const Scaffold(
@@ -137,7 +184,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Scaffold(
       body: RefreshIndicator(
         color: AppColors.gold,
-        onRefresh: () => provider.load(refresh: true),
+        onRefresh: () async {
+          await Future.wait([
+            provider.load(refresh: true),
+            context.read<AlertasProvider>().sincronizar(notificar: true),
+          ]);
+        },
         child: SlidableAutoCloseBehavior(
           child: CustomScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
@@ -150,18 +202,31 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Olá, ${perfil?.nome ?? '...'}',
-                      style: const TextStyle(
-                        color: AppColors.textPrimary,
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    const Text(
-                      'Visão geral dos seus veículos de trabalho',
-                      style: TextStyle(color: AppColors.textSecondary),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Olá, ${perfil?.nome ?? '...'}',
+                                style: const TextStyle(
+                                  color: AppColors.textPrimary,
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              const Text(
+                                'Visão geral dos seus veículos de trabalho',
+                                style: TextStyle(color: AppColors.textSecondary),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const BotaoCentralAlertas(),
+                      ],
                     ),
                   ],
                 ),
@@ -196,7 +261,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                   const SizedBox(height: 12),
                   DashboardIndicatorCard(
-                    titulo: 'Economia total',
+                    titulo: 'Economia (R\$)',
                     valor: dashboard != null
                         ? _formatMoeda(dashboard.economia)
                         : '—',
@@ -204,11 +269,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                   const SizedBox(height: 12),
                   DashboardIndicatorCard(
-                    titulo: 'Próximas manutenções',
-                    valor: dashboard != null
-                        ? dashboard.proximasManutencoes.toString()
-                        : '—',
-                    corValor: AppColors.gold,
+                    titulo: 'Alertas ativos',
+                    valor: _rotuloAlertas(alertas),
+                    corValor: alertas.totalVencidos > 0
+                        ? AppColors.red
+                        : (alertas.totalProximos > 0
+                            ? AppColors.gold
+                            : AppColors.green),
+                    onTap: _abrirCentralAlertas,
                   ),
                   const SizedBox(height: 24),
                   const Text(
@@ -230,21 +298,39 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         border: Border.all(color: AppColors.border),
                       ),
                       child: const Text(
-                        'Nenhum registro encontrado',
+                        'Nenhum dado ainda — cadastre um veículo para começar',
                         style: TextStyle(color: AppColors.textSecondary),
                       ),
                     )
                   else
-                    ...provider.veiculos.map(
-                      (veiculo) => Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: VeiculoSwipeTile(
-                          veiculo: veiculo,
-                          onTap: () => _abrirVeiculo(veiculo),
-                          onEdit: () => _editarVeiculo(veiculo),
-                          onConfirmDelete: () => _excluirVeiculo(veiculo),
-                        ),
-                      ),
+                    ...provider.veiculos.asMap().entries.map(
+                      (entry) {
+                        final index = entry.key;
+                        final veiculo = entry.value;
+                        final total = provider.veiculos.length;
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: VeiculoSwipeTile(
+                            veiculo: veiculo,
+                            onTap: () => _abrirVeiculo(veiculo),
+                            onEdit: () => _editarVeiculo(veiculo),
+                            onConfirmDelete: () => _excluirVeiculo(veiculo),
+                            executarDescoberta: _executarDescobertaSwipe,
+                            mostrarAmbasDirecoes: index == 0,
+                            atrasoDescoberta:
+                                Duration(milliseconds: index * 80),
+                            onDescobertaConcluida: index == total - 1
+                                ? () {
+                                    if (mounted) {
+                                      setState(
+                                        () => _executarDescobertaSwipe = false,
+                                      );
+                                    }
+                                  }
+                                : null,
+                          ),
+                        );
+                      },
                     ),
                   if (provider.isRefreshing) ...[
                     const SizedBox(height: 16),

@@ -33,6 +33,13 @@ class VeiculoListTile extends StatelessWidget {
     final categoria = veiculo.categoriaEnum;
     final icone = VeiculoCategoriaVisual.iconePara(categoria);
     final cor = VeiculoCategoriaVisual.corPara(categoria);
+    final placa = veiculo.placa?.trim();
+    final titulo = (placa != null && placa.isNotEmpty)
+        ? placa.toUpperCase()
+        : veiculo.rotulo;
+    final subtituloModelo = (placa != null && placa.isNotEmpty)
+        ? '${veiculo.marca} ${veiculo.modelo}'
+        : null;
 
     return Material(
       color: AppColors.card,
@@ -60,12 +67,23 @@ class VeiculoListTile extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      veiculo.rotulo,
-                      style: const TextStyle(
+                      titulo,
+                      style: TextStyle(
                         color: AppColors.textPrimary,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w700,
+                        fontSize: placa != null && placa.isNotEmpty ? 18 : 16,
                       ),
                     ),
+                    if (subtituloModelo != null) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        subtituloModelo,
+                        style: const TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 4),
                     Text(
                       _subtitulo(),

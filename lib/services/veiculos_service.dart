@@ -19,6 +19,14 @@ class VeiculosService {
         .toList();
   }
 
+  Future<Veiculo> obter(int id) async {
+    final json = await _apiClient.getJson('/veiculos/$id');
+    if (json is! Map<String, dynamic>) {
+      throw ApiException('Resposta inválida ao obter veículo.');
+    }
+    return Veiculo.fromJson(json);
+  }
+
   Future<Veiculo> criarTrabalho({
     required String marca,
     required String modelo,
