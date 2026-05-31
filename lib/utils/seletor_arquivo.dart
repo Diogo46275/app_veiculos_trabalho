@@ -2,6 +2,8 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
+import 'comprimir_imagem_anexo.dart';
+
 /// Limite da API (FastAPI) — RF-011.
 const tamanhoMaxAnexoBytes = 10 * 1024 * 1024;
 
@@ -16,10 +18,10 @@ const tamanhoMaxFotoPerfilBytes = 2 * 1024 * 1024;
 const extensoesAnexo = ['pdf', 'jpg', 'jpeg', 'png'];
 const extensoesFotoPerfil = ['jpg', 'jpeg', 'png'];
 
-/// Redimensionamento para NF/garantia (câmera e galeria).
-const _larguraMaxImagemAnexo = 1280;
-const _alturaMaxImagemAnexo = 1280;
-const _qualidadeImagemAnexo = 72;
+/// Redimensionamento para NF/garantia (câmera via ImagePicker).
+const _larguraMaxImagemAnexo = larguraMaxImagemAnexo;
+const _alturaMaxImagemAnexo = alturaMaxImagemAnexo;
+const _qualidadeImagemAnexo = qualidadeInicialImagemAnexo;
 
 enum OrigemAnexo {
   camera,
@@ -126,16 +128,42 @@ Future<List<ArquivoSelecionado>> selecionarMultiplosAnexos() async {
     final nome = arquivo.name.trim();
     if (bytes == null || bytes.isEmpty || nome.isEmpty) continue;
 
-    _validarExtensao(nome, extensoesAnexo, 'Use PDF, JPG ou PNG.');
+    selecionados.add(_prepararArquivoAnexo(nome, bytes));
+  }
+  return selecionados;
+}
+
+ArquivoSelecionado _prepararArquivoAnexo(String nome, List<int> bytes) {
+  _validarExtensao(nome, extensoesAnexo, 'Use PDF, JPG ou PNG.');
+
+  if (nomeArquivoEhImagemAnexo(nome)) {
     _validarTamanho(
       bytes.length,
       tamanhoMaxAnexoBytes,
       'Arquivo maior que 10 MB.',
     );
-    _validarTamanhoUpload(bytes.length);
-    selecionados.add(ArquivoSelecionado(nome: nome, bytes: bytes));
+    try {
+      final comprimido = comprimirImagemAnexoBytes(
+        bytes,
+        tamanhoMaxBytes: tamanhoMaxUploadAnexoBytes,
+      );
+      _validarTamanhoUpload(comprimido.length);
+      return ArquivoSelecionado(
+        nome: nomeImagemAnexoComprimida(nome),
+        bytes: comprimido,
+      );
+    } on FormatException {
+      throw SelecaoArquivoException('Não foi possível ler a imagem selecionada.');
+    }
   }
-  return selecionados;
+
+  _validarTamanho(
+    bytes.length,
+    tamanhoMaxAnexoBytes,
+    'Arquivo maior que 10 MB.',
+  );
+  _validarTamanhoUpload(bytes.length);
+  return ArquivoSelecionado(nome: nome, bytes: bytes);
 }
 
 Future<ArquivoSelecionado?> selecionarPdfAnexo() async {

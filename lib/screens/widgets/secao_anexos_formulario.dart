@@ -21,8 +21,8 @@ class SecaoAnexosFormulario extends StatelessWidget {
     required this.onRemoverUrlLegado,
     required this.onRemoverNovo,
     this.ajuda =
-        'Tire foto ou anexe PDF/imagem (até $maxAnexosPorRegistro por seção, 10 MB cada). '
-        'Toque em um anexo para abrir. Fotos são comprimidas para envio.',
+        'Tire foto ou anexe PDF/imagem (até $maxAnexosPorRegistro por seção). '
+        'Imagens são comprimidas automaticamente para envio. PDF até 1 MB.',
   });
 
   final String rotulo;
