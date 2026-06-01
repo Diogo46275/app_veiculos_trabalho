@@ -1,12 +1,14 @@
 # PENDENCIAS.md — App Veículos Mobile
 
-_Última atualização: 31/05/2026 (RF-006b/007b/010b/011 validados)_
+_Última atualização: 01/06/2026_
 
 ---
 
 ## Funcionalidades (RFs)
 
 **RF-001 a RF-011 (upload):** ✅ Validados — escopo mobile + anexos concluído.
+
+**Próximo produto (doc SaaS financeiro):** ver `ROADMAP_FINANCEIRO.md` (cruzamento DOC × PROJ, backlog FIN-001+).
 
 ## Melhorias técnicas (IMP)
 
