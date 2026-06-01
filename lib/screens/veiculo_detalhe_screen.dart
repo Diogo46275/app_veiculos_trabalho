@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../models/abastecimento.dart';
+import '../models/despesa.dart';
 import '../models/alerta_veiculo.dart';
 import '../models/manutencao.dart';
 import '../models/periodo_trabalho.dart';
@@ -9,6 +10,7 @@ import '../models/veiculo.dart';
 import '../providers/alertas_provider.dart';
 import '../providers/dashboard_provider.dart';
 import '../services/abastecimentos_service.dart';
+import '../services/despesas_service.dart';
 import '../services/alertas_service.dart';
 import '../services/api_client.dart';
 import '../services/manutencoes_service.dart';
@@ -19,11 +21,13 @@ import '../theme/app_colors.dart';
 import '../utils/formatacao.dart';
 import 'categorias_despesa_screen.dart';
 import 'detalhe_abastecimento_screen.dart';
+import 'detalhe_despesa_screen.dart';
 import 'detalhe_alerta_screen.dart';
 import 'detalhe_manutencao_screen.dart';
 import 'detalhe_periodo_screen.dart';
 import 'editar_veiculo_screen.dart';
 import 'form_abastecimento_screen.dart';
+import 'form_despesa_screen.dart';
 import 'form_alerta_screen.dart';
 import 'form_iniciar_periodo_screen.dart';
 import 'form_editar_periodo_screen.dart';
@@ -42,7 +46,7 @@ class VeiculoDetalheScreen extends StatefulWidget {
 
   final Veiculo veiculo;
 
-  /// 0 Abastecimentos, 1 Manutenções, 2 Alertas, 3 Períodos.
+  /// 0 Abastecimentos, 1 Manutenções, 2 Despesas, 3 Alertas, 4 Períodos.
   final int abaInicial;
 
   @override
@@ -54,6 +58,7 @@ class _VeiculoDetalheScreenState extends State<VeiculoDetalheScreen>
   late final VeiculoModulosService _service;
   late final AbastecimentosService _abastecimentosService;
   late final ManutencoesService _manutencoesService;
+  late final DespesasService _despesasService;
   late final AlertasService _alertasService;
   late final PeriodosTrabalhoService _periodosService;
   late final TabController _tabController;
@@ -61,17 +66,20 @@ class _VeiculoDetalheScreenState extends State<VeiculoDetalheScreen>
 
   List<Abastecimento> _abastecimentos = const [];
   List<Manutencao> _manutencoes = const [];
+  List<Despesa> _despesas = const [];
   List<AlertaVeiculo> _alertas = const [];
   List<PeriodoTrabalho> _periodos = const [];
   PeriodoTrabalho? _periodoAberto;
 
   bool _carregandoAbast = true;
   bool _carregandoManut = true;
+  bool _carregandoDespesas = true;
   bool _carregandoAlertas = true;
   bool _carregandoPeriodos = true;
 
   String? _erroAbast;
   String? _erroManut;
+  String? _erroDespesas;
   String? _erroAlertas;
   String? _erroPeriodos;
 
@@ -82,21 +90,22 @@ class _VeiculoDetalheScreenState extends State<VeiculoDetalheScreen>
     _service = VeiculoModulosService();
     _abastecimentosService = AbastecimentosService(apiClient: ApiClient());
     _manutencoesService = ManutencoesService(apiClient: ApiClient());
+    _despesasService = DespesasService(apiClient: ApiClient());
     _alertasService = AlertasService(apiClient: ApiClient());
     _periodosService = PeriodosTrabalhoService(apiClient: ApiClient());
     _tabController = TabController(
-      length: 4,
+      length: 5,
       vsync: this,
-      initialIndex: widget.abaInicial.clamp(0, 3),
+      initialIndex: widget.abaInicial.clamp(0, 4),
     );
     _tabController.addListener(() {
       if (!_tabController.indexIsChanging) {
         setState(() {});
         // Aba Alertas: status depende do km_atual — recarrega ao entrar na aba.
-        if (_tabController.index == 2) {
+        if (_tabController.index == 3) {
           _carregarAlertas();
         }
-        if (_tabController.index == 3) {
+        if (_tabController.index == 4) {
           _carregarPeriodos();
         }
       }
@@ -115,6 +124,7 @@ class _VeiculoDetalheScreenState extends State<VeiculoDetalheScreen>
     await Future.wait([
       _carregarAbastecimentos(),
       _carregarManutencoes(),
+      _carregarDespesas(),
       _carregarAlertas(),
       _carregarPeriodos(),
     ]);
@@ -170,6 +180,33 @@ class _VeiculoDetalheScreenState extends State<VeiculoDetalheScreen>
       setState(() {
         _erroManut = 'Erro ao carregar manutenções.';
         _carregandoManut = false;
+      });
+    }
+  }
+
+  Future<void> _carregarDespesas() async {
+    setState(() {
+      _carregandoDespesas = true;
+      _erroDespesas = null;
+    });
+    try {
+      final lista = await _despesasService.listarPorVeiculo(_veiculo.id);
+      if (!mounted) return;
+      setState(() {
+        _despesas = lista;
+        _carregandoDespesas = false;
+      });
+    } on ApiException catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _erroDespesas = error.message;
+        _carregandoDespesas = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _erroDespesas = 'Erro ao carregar despesas.';
+        _carregandoDespesas = false;
       });
     }
   }
@@ -488,6 +525,69 @@ class _VeiculoDetalheScreenState extends State<VeiculoDetalheScreen>
     }
   }
 
+  Future<void> _novaDespesa() async {
+    final salvo = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (_) => FormDespesaScreen(veiculo: _veiculo),
+      ),
+    );
+    if (salvo == true && mounted) {
+      await _carregarDespesas();
+      await _atualizarAposMudancaKm();
+    }
+  }
+
+  Future<void> _verDespesa(Despesa item) async {
+    final salvo = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (_) => DetalheDespesaScreen(veiculo: _veiculo, item: item),
+      ),
+    );
+    if (salvo == true && mounted) {
+      await _carregarDespesas();
+      await _atualizarAposMudancaKm();
+    }
+  }
+
+  Future<void> _editarDespesa(Despesa item) async {
+    final salvo = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (_) => FormDespesaScreen(veiculo: _veiculo, despesa: item),
+      ),
+    );
+    if (salvo == true && mounted) {
+      await _carregarDespesas();
+      await _atualizarAposMudancaKm();
+    }
+  }
+
+  Future<void> _excluirDespesa(Despesa item) async {
+    final confirmado = await confirmarExclusaoDespesa(context, item);
+    if (!confirmado || !mounted) return;
+
+    try {
+      await _despesasService.excluir(item.id);
+      if (!mounted) return;
+      await _carregarDespesas();
+      await _atualizarAposMudancaKm();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Despesa excluída')),
+        );
+      }
+    } on ApiException catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error.message)),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Erro ao excluir despesa.')),
+      );
+    }
+  }
+
   Future<void> _novoAlerta() async {
     final salvo = await Navigator.of(context).push<bool>(
       MaterialPageRoute(
@@ -647,6 +747,7 @@ class _VeiculoDetalheScreenState extends State<VeiculoDetalheScreen>
           tabs: const [
             Tab(text: 'Abastecimentos'),
             Tab(text: 'Manutenções'),
+            Tab(text: 'Despesas'),
             Tab(text: 'Alertas'),
             Tab(text: 'Períodos'),
           ],
@@ -684,6 +785,16 @@ class _VeiculoDetalheScreenState extends State<VeiculoDetalheScreen>
                   onVer: _verManutencao,
                   onEditar: _editarManutencao,
                   onExcluir: _excluirManutencao,
+                ),
+                _AbaDespesas(
+                  carregando: _carregandoDespesas,
+                  erro: _erroDespesas,
+                  itens: _despesas,
+                  onRecarregar: _carregarDespesas,
+                  onNovo: _novaDespesa,
+                  onVer: _verDespesa,
+                  onEditar: _editarDespesa,
+                  onExcluir: _excluirDespesa,
                 ),
                 _AbaAlertas(
                   carregando: _carregandoAlertas,
@@ -727,25 +838,32 @@ class _VeiculoDetalheScreenState extends State<VeiculoDetalheScreen>
                 )
               : _tabController.index == 2
                   ? FloatingActionButton(
-                      onPressed: _novoAlerta,
-                      tooltip: 'Novo alerta',
+                      onPressed: _novaDespesa,
+                      tooltip: 'Nova despesa',
                       child: const Icon(Icons.add),
                     )
                   : _tabController.index == 3
                       ? FloatingActionButton(
-                          onPressed: _periodoAberto != null
-                              ? () => _abrirTurnoAberto(_periodoAberto!)
-                              : _iniciarPeriodo,
-                          tooltip: _periodoAberto != null
-                              ? 'Turno em andamento'
-                              : 'Iniciar turno',
-                          child: Icon(
-                            _periodoAberto != null
-                                ? Icons.schedule
-                                : Icons.add,
-                          ),
+                          onPressed: _novoAlerta,
+                          tooltip: 'Novo alerta',
+                          child: const Icon(Icons.add),
                         )
-                      : null,
+                      : _tabController.index == 4
+                          ? FloatingActionButton(
+                              onPressed: _periodoAberto != null
+                                  ? () =>
+                                      _abrirTurnoAberto(_periodoAberto!)
+                                  : _iniciarPeriodo,
+                              tooltip: _periodoAberto != null
+                                  ? 'Turno em andamento'
+                                  : 'Iniciar turno',
+                              child: Icon(
+                                _periodoAberto != null
+                                    ? Icons.schedule
+                                    : Icons.add,
+                              ),
+                            )
+                          : null,
     );
   }
 }
@@ -1010,6 +1128,120 @@ class _AbaManutencoes extends StatelessWidget {
       partes.add('Garantia (${item.quantidadeAnexosGarantia})');
     }
     return partes.join(', ');
+  }
+}
+
+class _AbaDespesas extends StatelessWidget {
+  const _AbaDespesas({
+    required this.carregando,
+    required this.erro,
+    required this.itens,
+    required this.onRecarregar,
+    required this.onNovo,
+    required this.onVer,
+    required this.onEditar,
+    required this.onExcluir,
+  });
+
+  final bool carregando;
+  final String? erro;
+  final List<Despesa> itens;
+  final Future<void> Function() onRecarregar;
+  final VoidCallback onNovo;
+  final void Function(Despesa item) onVer;
+  final void Function(Despesa item) onEditar;
+  final Future<void> Function(Despesa item) onExcluir;
+
+  @override
+  Widget build(BuildContext context) {
+    if (carregando) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (erro != null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.error_outline, color: AppColors.red, size: 40),
+              const SizedBox(height: 12),
+              Text(
+                erro!,
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: AppColors.textSecondary),
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                height: 44,
+                child: OutlinedButton(
+                  onPressed: () => onRecarregar(),
+                  child: const Text('Tentar novamente'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (itens.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.receipt_long_outlined,
+                color: AppColors.textSecondary,
+                size: 48,
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'Nenhuma despesa registrada.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: AppColors.textSecondary),
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                height: 44,
+                child: ElevatedButton.icon(
+                  onPressed: onNovo,
+                  icon: const Icon(Icons.add),
+                  label: const Text('Registrar primeira'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: onRecarregar,
+      child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 88),
+        children: [
+          for (final item in itens)
+            DetalheItemCard(
+              titulo: item.rotuloCategoria,
+              linhas: [
+                'Data: ${Formatacao.data(item.data)}',
+                'Valor: ${Formatacao.moeda(item.valor)}',
+                if (item.km != null) 'Km: ${Formatacao.km(item.km!)}',
+                if (item.descricao != null && item.descricao!.isNotEmpty)
+                  item.descricao!,
+              ],
+              onTap: () => onVer(item),
+              onEdit: () => onEditar(item),
+              onDelete: () => onExcluir(item),
+            ),
+        ],
+      ),
+    );
   }
 }
 

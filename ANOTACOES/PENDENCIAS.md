@@ -10,7 +10,9 @@ _Última atualização: 01/06/2026_
 
 **Próximo produto (doc SaaS financeiro):** ver `ROADMAP_FINANCEIRO.md`.
 
-**FIN-001 (categorias despesa/veículo):** implementado — validar no app (detalhe veículo → ícone categorias) após deploy API.
+**FIN-001:** ✅ Validado.
+
+**FIN-002 (despesa genérica):** implementado — validar aba Despesas no detalhe do veículo após deploy API (`/api/despesas/`).
 
 ## Melhorias técnicas (IMP)
 

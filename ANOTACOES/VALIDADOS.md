@@ -2,7 +2,7 @@
 
 _Registro de 🏁 RFs e ⚙️ IMPs. RFs só entram como ✅ após validação explícita do Diogo._
 
-_Última atualização: 31/05/2026 (RF-006b/007b/010b/011 validados — upload múltiplos anexos)_
+_Última atualização: 01/06/2026 (FIN-001 validado; FIN-002 implementado)_
 
 ---
 
@@ -39,6 +39,13 @@ _Última atualização: 31/05/2026 (RF-006b/007b/010b/011 validados — upload m
 | RF-010b | Upload foto de perfil | ✅ Validado | Perfil > Enviar foto > avatar atualiza; JPG/PNG até 2 MB |
 | RF-011 | Múltiplos anexos por registro (NF/garantia) | ✅ Validado | Até 5 anexos; câmera e galeria/arquivo; produção `bytes-techus.com.br` |
 
+### Produto financeiro (FIN — doc SaaS)
+
+| ID | Resultado Final | Status | Teste de aceite |
+|----|----------------|--------|-----------------|
+| FIN-001 | Categorias de despesa por veículo (nome + ícone, seed padrão) | ✅ Validado | Detalhe veículo → categorias → 6 sugeridas + CRUD |
+| FIN-002 | Despesa genérica (categoria, data, valor, km, descrição) | ⏳ Aguardando validação | Aba Despesas → registrar → listar → editar/excluir |
+
 ---
 
 ## ⚙️ Implementações (IMP)
@@ -67,6 +74,8 @@ _Última atualização: 31/05/2026 (RF-006b/007b/010b/011 validados — upload m
 | IMP-024 | CRUD plataformas/tipos no perfil mobile | `plataformas_service.dart`, `tipos_manutencao_service.dart` | RF-010 |
 | IMP-025 | Upload multipart (NF, garantia, foto) + múltiplos anexos | `api_client.dart`, `seletor_arquivo.dart`, `upload_anexos_sequencial.dart`, `secao_anexos_formulario.dart`, telas detalhe/form | RF-006b, RF-007b, RF-010b, RF-011 |
 | IMP-026 | Compressão de imagens na galeria/arquivo (paridade câmera) | `comprimir_imagem_anexo.dart`, `seletor_arquivo.dart` | RF-006b, RF-007b, RF-011 |
+| FIN-IMP-001 | Categorias despesa API + tela | `categorias_despesa_service.dart`, `categorias_despesa_screen.dart` | FIN-001 |
+| FIN-IMP-002 | Despesas CRUD API + aba no veículo | `despesas_service.dart`, `form_despesa_screen.dart`, `veiculo_detalhe_screen.dart` | FIN-002 |
 | IMP-011 | MainShell (Bottom Bar + FAB) | `lib/screens/main_shell.dart` | RF-002, RF-003 |
 | IMP-012 | CategoriaVeiculo enum + visual | `lib/models/categoria_veiculo.dart` | RF-004b |
 | IMP-013 | EditarVeiculoScreen | `lib/screens/editar_veiculo_screen.dart` | RF-003c, RF-004c |

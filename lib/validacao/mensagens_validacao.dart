@@ -101,4 +101,11 @@ abstract final class MensagensValidacao {
   static const nomeCadastroPerfilObrigatorio = 'Informe o nome';
   static const nomeCadastroPerfilMaxLength =
       'O nome deve ter no máximo 60 caracteres';
+
+  static const categoriaDespesaObrigatoria = 'Selecione a categoria';
+  static const valorDespesaObrigatorio = 'Informe o valor';
+  static const valorDespesaInvalido = 'Valor inválido';
+  static const descricaoDespesaMaxLength =
+      'A descrição deve ter no máximo 255 caracteres';
+  static const kmDespesaInvalido = 'Km inválido';
 }

@@ -120,11 +120,13 @@ Ordem alinhada ao risco do doc (`REQUISITOS_APP_VEICULOS.md` § Riscos) e depend
 | 4 | Receita avulsa no ganho/hora só com turno? | _Pendente_ |
 | 5 | Prefixo **FIN-xxx** ou PROJ RF-012+? | **FIN-xxx** |
 
-### FIN-001 (em implementação)
+### FIN-001 ✅ Validado (01/06/2026)
 
-- Backend: `models/categoria_despesa.py`, `/api/categorias-despesa/`, seed em `utils/categorias_despesa_padrao.py`
-- Flutter: `CategoriasDespesaScreen`, atalho no detalhe do veículo (ícone categorias)
-- Status: aguardando validação do Diogo
+### FIN-002 (aguardando validação)
+
+- Backend: `models/despesa.py`, `/api/despesas/`, soma no `dashboard_service.py`
+- Flutter: aba **Despesas** no detalhe do veículo + `FormDespesaScreen` / `DetalheDespesaScreen`
+- Convive com abastecimentos e manutenções (decisão 1)
 
 ---
 

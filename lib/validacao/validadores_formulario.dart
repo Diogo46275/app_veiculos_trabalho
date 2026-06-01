@@ -421,3 +421,38 @@ String? validarNomeCadastroPerfil(String? value) {
   }
   return null;
 }
+
+// --- Despesa (FIN-002) ---
+
+const _maxDescricaoDespesa = 255;
+
+String? validarCategoriaDespesa(Object? value) {
+  if (value == null) return MensagensValidacao.categoriaDespesaObrigatoria;
+  return null;
+}
+
+String? validarValorDespesa(String? value) {
+  final texto = value?.trim() ?? '';
+  if (texto.isEmpty) return MensagensValidacao.valorDespesaObrigatorio;
+  final valor = ParseNumero.decimal(texto);
+  if (valor == null || valor < 0) {
+    return MensagensValidacao.valorDespesaInvalido;
+  }
+  return null;
+}
+
+String? validarDescricaoDespesa(String? value) {
+  final texto = value?.trim() ?? '';
+  if (texto.length > _maxDescricaoDespesa) {
+    return MensagensValidacao.descricaoDespesaMaxLength;
+  }
+  return null;
+}
+
+String? validarKmDespesa(String? value) {
+  final texto = value?.trim() ?? '';
+  if (texto.isEmpty) return null;
+  final km = int.tryParse(texto);
+  if (km == null || km < 0) return MensagensValidacao.kmDespesaInvalido;
+  return null;
+}
