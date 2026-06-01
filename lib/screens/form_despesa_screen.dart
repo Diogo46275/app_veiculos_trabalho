@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
+import '../models/anexo_registro.dart';
 import '../models/categoria_despesa.dart';
 import '../models/despesa.dart';
 import '../models/veiculo.dart';
@@ -7,13 +9,16 @@ import '../services/api_client.dart';
 import '../services/categorias_despesa_service.dart';
 import '../services/despesas_service.dart';
 import '../theme/app_colors.dart';
+import '../utils/anexo_exibicao.dart';
 import '../utils/formatacao.dart';
 import '../utils/iso_datetime.dart';
 import '../utils/parse_numero.dart';
+import '../utils/seletor_arquivo.dart';
 import '../utils/seletor_data_br.dart';
 import '../validacao/validadores_formulario.dart';
 import 'categorias_despesa_screen.dart';
 import 'widgets/botao_ir_dashboard.dart';
+import 'widgets/secao_anexos_formulario.dart';
 
 class FormDespesaScreen extends StatefulWidget {
   const FormDespesaScreen({
@@ -42,7 +47,12 @@ class _FormDespesaScreenState extends State<FormDespesaScreen> {
 
   List<CategoriaDespesa> _categorias = const [];
   CategoriaDespesa? _categoriaSelecionada;
+  List<AnexoRegistro> _anexosNfAtuais = const [];
+  final Set<int> _idsRemoverNf = {};
+  final Set<String> _urlsRemoverNf = {};
+  final List<ArquivoSelecionado> _arquivosNovosNf = [];
   bool _carregandoCategorias = true;
+  bool _carregandoRegistro = false;
   bool _salvando = false;
   String? _erroGeral;
 
@@ -53,6 +63,7 @@ class _FormDespesaScreenState extends State<FormDespesaScreen> {
     _categoriasService = CategoriasDespesaService(apiClient: ApiClient());
     final item = widget.despesa;
     if (item != null) {
+      _carregandoRegistro = true;
       _data = DateTime.tryParse(item.data) ?? DateTime.now();
       _valorController = TextEditingController(
         text: Formatacao.decimal(item.valor),
@@ -61,6 +72,8 @@ class _FormDespesaScreenState extends State<FormDespesaScreen> {
       _kmController = TextEditingController(
         text: item.km?.toString() ?? '',
       );
+      _aplicarAnexos(item);
+      _carregarRegistro();
     } else {
       _data = DateTime.now();
       _valorController = TextEditingController();
@@ -70,6 +83,49 @@ class _FormDespesaScreenState extends State<FormDespesaScreen> {
       );
     }
     _carregarCategorias();
+  }
+
+  void _aplicarAnexos(Despesa item) {
+    _anexosNfAtuais = List.from(item.anexosNfParaExibicao);
+    _idsRemoverNf.clear();
+    _urlsRemoverNf.clear();
+    _arquivosNovosNf.clear();
+  }
+
+  void _atualizarCampos(Despesa item) {
+    _data = DateTime.tryParse(item.data) ?? _data;
+    _valorController.text = Formatacao.decimal(item.valor);
+    _descricaoController.text = item.descricao ?? '';
+    _kmController.text = item.km?.toString() ?? '';
+    _aplicarAnexos(item);
+  }
+
+  Future<void> _carregarRegistro() async {
+    final item = widget.despesa;
+    if (item == null) return;
+
+    try {
+      final atualizado = await _service.obterPorVeiculo(
+        widget.veiculo.id,
+        item.id,
+      );
+      if (!mounted) return;
+      setState(() {
+        if (atualizado != null) {
+          _atualizarCampos(atualizado);
+        }
+        _carregandoRegistro = false;
+      });
+    } on ApiException catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _erroGeral = error.message;
+        _carregandoRegistro = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _carregandoRegistro = false);
+    }
   }
 
   @override
@@ -129,6 +185,65 @@ class _FormDespesaScreenState extends State<FormDespesaScreen> {
     if (mounted) await _carregarCategorias();
   }
 
+  Future<void> _adicionarAnexosNf(List<ArquivoSelecionado> arquivos) async {
+    if (!mounted || arquivos.isEmpty) return;
+    if (excedeLimiteAnexos(
+      _anexosNfAtuais,
+      idsRemover: _idsRemoverNf,
+      urlsRemover: _urlsRemoverNf,
+      arquivosNovos: _arquivosNovosNf.length,
+      adicionar: arquivos.length,
+    )) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Máximo de $maxAnexosPorRegistro anexos por registro.'),
+        ),
+      );
+      return;
+    }
+    setState(() => _arquivosNovosNf.addAll(arquivos));
+  }
+
+  Future<void> _adicionarAnexoNf(ArquivoSelecionado? arquivo) async {
+    if (arquivo == null) return;
+    await _adicionarAnexosNf([arquivo]);
+  }
+
+  Future<void> _tratarErroAnexo(SelecaoArquivoException error) async {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(error.message)),
+    );
+  }
+
+  Future<void> _tirarFotoNf() async {
+    try {
+      await _adicionarAnexoNf(await selecionarImagemAnexo(ImageSource.camera));
+    } on SelecaoArquivoException catch (error) {
+      await _tratarErroAnexo(error);
+    }
+  }
+
+  Future<void> _escolherOutroNf() async {
+    try {
+      await _adicionarAnexosNf(await selecionarMultiplosAnexos());
+    } on SelecaoArquivoException catch (error) {
+      await _tratarErroAnexo(error);
+    }
+  }
+
+  void _removerAnexoExistenteNf(int id) {
+    setState(() => _idsRemoverNf.add(id));
+  }
+
+  void _removerAnexoUrlLegadoNf(String url) {
+    setState(() => _urlsRemoverNf.add(chaveUrlAnexo(AnexoRegistro(id: 0, url: url))));
+  }
+
+  void _removerAnexoNovoNf(int indice) {
+    setState(() => _arquivosNovosNf.removeAt(indice));
+  }
+
   Future<void> _salvar() async {
     FocusScope.of(context).unfocus();
     setState(() => _erroGeral = null);
@@ -150,6 +265,12 @@ class _FormDespesaScreenState extends State<FormDespesaScreen> {
     try {
       final dataIso = IsoDatetime.data(_data);
       final descricao = _descricaoController.text.trim();
+      final removerTodosNf = todosAnexosMarcadosRemover(
+        _anexosNfAtuais,
+        idsRemover: _idsRemoverNf,
+        urlsRemover: _urlsRemoverNf,
+      );
+
       if (widget.editando) {
         await _service.atualizar(
           id: widget.despesa!.id,
@@ -158,6 +279,9 @@ class _FormDespesaScreenState extends State<FormDespesaScreen> {
           valor: valor,
           descricao: descricao.isEmpty ? null : descricao,
           km: km,
+          arquivosNf: _arquivosNovosNf,
+          removerNf: removerTodosNf && _arquivosNovosNf.isEmpty,
+          removerAnexoIds: _idsRemoverNf.toList(),
         );
       } else {
         await _service.criar(
@@ -167,6 +291,7 @@ class _FormDespesaScreenState extends State<FormDespesaScreen> {
           valor: valor,
           descricao: descricao.isEmpty ? null : descricao,
           km: km,
+          arquivosNf: _arquivosNovosNf,
         );
       }
       if (!mounted) return;
@@ -188,12 +313,14 @@ class _FormDespesaScreenState extends State<FormDespesaScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final carregando = _carregandoCategorias || _carregandoRegistro;
+
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.editando ? 'Editar despesa' : 'Nova despesa'),
         actions: acoesAppBarComDashboard(const []),
       ),
-      body: _carregandoCategorias
+      body: carregando
           ? const Center(
               child: CircularProgressIndicator(color: AppColors.blueText),
             )
@@ -307,6 +434,20 @@ class _FormDespesaScreenState extends State<FormDespesaScreen> {
                           labelText: 'Descrição (opcional)',
                         ),
                         validator: validarDescricaoDespesa,
+                      ),
+                      const SizedBox(height: 16),
+                      SecaoAnexosFormulario(
+                        rotulo: 'Comprovantes (anexos)',
+                        anexosAtuais: _anexosNfAtuais,
+                        idsRemover: _idsRemoverNf,
+                        urlsRemover: _urlsRemoverNf,
+                        arquivosNovos: _arquivosNovosNf,
+                        desabilitado: _salvando,
+                        onTirarFoto: _tirarFotoNf,
+                        onEscolherOutro: _escolherOutroNf,
+                        onRemoverExistente: _removerAnexoExistenteNf,
+                        onRemoverUrlLegado: _removerAnexoUrlLegadoNf,
+                        onRemoverNovo: _removerAnexoNovoNf,
                       ),
                       const SizedBox(height: 24),
                       SizedBox(

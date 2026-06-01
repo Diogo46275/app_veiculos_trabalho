@@ -1,3 +1,6 @@
+import '../utils/anexo_exibicao.dart';
+import 'anexo_registro.dart';
+
 class Despesa {
   const Despesa({
     required this.id,
@@ -9,6 +12,7 @@ class Despesa {
     required this.valor,
     this.descricao,
     this.km,
+    this.anexosNf = const [],
   });
 
   final int id;
@@ -20,10 +24,26 @@ class Despesa {
   final double valor;
   final String? descricao;
   final int? km;
+  final List<AnexoRegistro> anexosNf;
 
   String get rotuloCategoria => '$categoriaIcone $categoriaNome';
 
+  bool get temAnexoNf => anexosNfParaExibicao.isNotEmpty;
+
+  int get quantidadeAnexosNf => anexosNfParaExibicao.length;
+
+  List<AnexoRegistro> get anexosNfParaExibicao =>
+      combinarAnexosParaExibicao(anexos: anexosNf, urlLegado: null);
+
   factory Despesa.fromJson(Map<String, dynamic> json) {
+    final anexosRaw = json['anexos_nf'] as List<dynamic>?;
+    final anexosNf = anexosRaw == null
+        ? const <AnexoRegistro>[]
+        : anexosRaw
+            .whereType<Map<String, dynamic>>()
+            .map(AnexoRegistro.fromJson)
+            .toList();
+
     return Despesa(
       id: json['id'] as int,
       veiculoId: json['veiculo_id'] as int,
@@ -34,6 +54,7 @@ class Despesa {
       valor: (json['valor'] as num).toDouble(),
       descricao: json['descricao'] as String?,
       km: json['km'] as int?,
+      anexosNf: anexosNf,
     );
   }
 }

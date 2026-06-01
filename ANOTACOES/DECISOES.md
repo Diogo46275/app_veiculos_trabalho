@@ -13,6 +13,7 @@ _Última atualização: 01/06/2026_
 | 1 | Abast/manut vs `Despesa` | **Convivência** — módulos atuais permanecem; despesa genérica em FIN-002 |
 | 2 | Categorias de despesa | **Sugestões padrão** ao criar veículo (seed API) |
 | 5 | IDs de backlog/validação | **Prefixo FIN-xxx** |
+| 6 | Recorrência / parcelamento (FIN-007, FIN-008) | **Não antecipar** — seguir cronograma (FIN-003 → FIN-004 → … → FIN-007/008 na Fase B) |
 
 Pendentes (3 e 4): relatórios mobile vs endpoint; receita avulsa no ganho/hora.
 

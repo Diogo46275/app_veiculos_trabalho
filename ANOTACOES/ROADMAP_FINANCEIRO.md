@@ -122,11 +122,19 @@ Ordem alinhada ao risco do doc (`REQUISITOS_APP_VEICULOS.md` § Riscos) e depend
 
 ### FIN-001 ✅ Validado (01/06/2026)
 
-### FIN-002 (aguardando validação)
+### FIN-002 ✅ Validado (01/06/2026)
 
 - Backend: `models/despesa.py`, `/api/despesas/`, soma no `dashboard_service.py`
 - Flutter: aba **Despesas** no detalhe do veículo + `FormDespesaScreen` / `DetalheDespesaScreen`
 - Convive com abastecimentos e manutenções (decisão 1)
+- Recorrência e parcelamento: **fora do escopo** — ver FIN-007 / FIN-008 (Fase B)
+
+### FIN-003 (aguardando validação)
+
+- Backend: `ENTIDADE_DESPESA`, rotas multipart `arquivo_nf`, `utils/despesa.py`, exclusão em cascata
+- Flutter: `SecaoAnexosFormulario` + `ListaAnexosAbrir` no form/detalhe despesa (reuso IMP-025)
+- Teste de aceite: até 5 comprovantes; abrir anexo; remover no editar
+- **Fix 500 com 2 anexos:** todos os arquivos novos em **um** POST/PUT (não PUT sequencial após criar)
 
 ---
 

@@ -2,7 +2,7 @@
 
 _Registro de 🏁 RFs e ⚙️ IMPs. RFs só entram como ✅ após validação explícita do Diogo._
 
-_Última atualização: 01/06/2026 (FIN-001 validado; FIN-002 implementado)_
+_Última atualização: 01/06/2026 (FIN-002 validado)_
 
 ---
 
@@ -44,7 +44,8 @@ _Última atualização: 01/06/2026 (FIN-001 validado; FIN-002 implementado)_
 | ID | Resultado Final | Status | Teste de aceite |
 |----|----------------|--------|-----------------|
 | FIN-001 | Categorias de despesa por veículo (nome + ícone, seed padrão) | ✅ Validado | Detalhe veículo → categorias → 6 sugeridas + CRUD |
-| FIN-002 | Despesa genérica (categoria, data, valor, km, descrição) | ⏳ Aguardando validação | Aba Despesas → registrar → listar → editar/excluir |
+| FIN-002 | Despesa genérica (categoria, data, valor, km, descrição) | ✅ Validado | Aba Despesas → registrar → listar → editar/excluir; dashboard rentabilidade |
+| FIN-003 | Anexos em despesa (até 5 comprovantes, câmera/galeria) | ⏳ Aguardando validação | Form/detalhe despesa → anexar → abrir → remover → excluir despesa limpa anexos |
 
 ---
 
@@ -76,6 +77,7 @@ _Última atualização: 01/06/2026 (FIN-001 validado; FIN-002 implementado)_
 | IMP-026 | Compressão de imagens na galeria/arquivo (paridade câmera) | `comprimir_imagem_anexo.dart`, `seletor_arquivo.dart` | RF-006b, RF-007b, RF-011 |
 | FIN-IMP-001 | Categorias despesa API + tela | `categorias_despesa_service.dart`, `categorias_despesa_screen.dart` | FIN-001 |
 | FIN-IMP-002 | Despesas CRUD API + aba no veículo | `despesas_service.dart`, `form_despesa_screen.dart`, `veiculo_detalhe_screen.dart` | FIN-002 |
+| FIN-IMP-003 | Anexos em despesa (multipart + SecaoAnexos) | `entidade_tipo=despesa`, `form_despesa_screen.dart`, `detalhe_despesa_screen.dart` | FIN-003, RF-011 |
 | IMP-011 | MainShell (Bottom Bar + FAB) | `lib/screens/main_shell.dart` | RF-002, RF-003 |
 | IMP-012 | CategoriaVeiculo enum + visual | `lib/models/categoria_veiculo.dart` | RF-004b |
 | IMP-013 | EditarVeiculoScreen | `lib/screens/editar_veiculo_screen.dart` | RF-003c, RF-004c |
@@ -106,6 +108,7 @@ _Última atualização: 01/06/2026 (FIN-001 validado; FIN-002 implementado)_
 | 31/05/2026 | RF-010b | Diogo | Foto de perfil via galeria |
 | 31/05/2026 | RF-011 | Diogo | Múltiplos anexos (máx. 5); upload sequencial; API produção OK; compressão galeria = câmera |
 | 01/06/2026 | FIN-001 | Diogo | Categorias por veículo + seed padrão |
+| 01/06/2026 | FIN-002 | Diogo | CRUD despesas na aba Despesas; itens 1–5 do checklist (incl. rentabilidade) |
 
 **Escopo mobile principal:** RF-001 a RF-010 ✅ — concluído e validado.
 
