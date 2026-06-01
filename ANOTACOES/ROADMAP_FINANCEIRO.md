@@ -110,15 +110,21 @@ Ordem alinhada ao risco do doc (`REQUISITOS_APP_VEICULOS.md` § Riscos) e depend
 
 ---
 
-## 5. Decisões pendentes (Diogo)
+## 5. Decisões (Diogo — 01/06/2026)
 
-| # | Pergunta |
-|---|----------|
-| 1 | Migrar abast/manut para `Despesa` ou manter módulos separados? |
-| 2 | Categorias 100% livres ou pré-popular (Abastecimento, Manutenção, …)? |
-| 3 | Relatórios mobile: gerar no aparelho ou endpoint (como web)? |
-| 4 | Receita avulsa entra no ganho/hora só se vinculada a turno? |
-| 5 | Novos RFs em `VALIDADOS.md`: prefixo **FIN-xxx** ou PROJ RF-012+? |
+| # | Pergunta | Resposta |
+|---|----------|----------|
+| 1 | Migrar abast/manut para `Despesa` ou manter módulos separados? | **Convivência** |
+| 2 | Categorias 100% livres ou pré-popular? | **Sugestões padrão** (seed) |
+| 3 | Relatórios mobile: gerar no aparelho ou endpoint? | _Pendente_ |
+| 4 | Receita avulsa no ganho/hora só com turno? | _Pendente_ |
+| 5 | Prefixo **FIN-xxx** ou PROJ RF-012+? | **FIN-xxx** |
+
+### FIN-001 (em implementação)
+
+- Backend: `models/categoria_despesa.py`, `/api/categorias-despesa/`, seed em `utils/categorias_despesa_padrao.py`
+- Flutter: `CategoriasDespesaScreen`, atalho no detalhe do veículo (ícone categorias)
+- Status: aguardando validação do Diogo
 
 ---
 

@@ -17,6 +17,7 @@ import '../services/periodos_trabalho_service.dart';
 import '../services/veiculo_modulos_service.dart';
 import '../theme/app_colors.dart';
 import '../utils/formatacao.dart';
+import 'categorias_despesa_screen.dart';
 import 'detalhe_abastecimento_screen.dart';
 import 'detalhe_alerta_screen.dart';
 import 'detalhe_manutencao_screen.dart';
@@ -610,6 +611,17 @@ class _VeiculoDetalheScreenState extends State<VeiculoDetalheScreen>
       appBar: AppBar(
         title: Text(_veiculo.rotulo),
         actions: acoesAppBarComDashboard([
+          IconButton(
+            icon: const Icon(Icons.category_outlined),
+            tooltip: 'Categorias de despesa',
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => CategoriasDespesaScreen(veiculo: _veiculo),
+                ),
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.edit_outlined),
             tooltip: 'Editar',

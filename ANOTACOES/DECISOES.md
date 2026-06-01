@@ -2,7 +2,19 @@
 
 _Registro de decisões de arquitetura e produto._
 
-_Última atualização: 31/05/2026_
+_Última atualização: 01/06/2026_
+
+---
+
+## Produto financeiro (DOC × PROJ) — confirmado 01/06/2026
+
+| # | Decisão | Escolha |
+|---|---------|---------|
+| 1 | Abast/manut vs `Despesa` | **Convivência** — módulos atuais permanecem; despesa genérica em FIN-002 |
+| 2 | Categorias de despesa | **Sugestões padrão** ao criar veículo (seed API) |
+| 5 | IDs de backlog/validação | **Prefixo FIN-xxx** |
+
+Pendentes (3 e 4): relatórios mobile vs endpoint; receita avulsa no ganho/hora.
 
 ---
 

@@ -8,7 +8,9 @@ _Última atualização: 01/06/2026_
 
 **RF-001 a RF-011 (upload):** ✅ Validados — escopo mobile + anexos concluído.
 
-**Próximo produto (doc SaaS financeiro):** ver `ROADMAP_FINANCEIRO.md` (cruzamento DOC × PROJ, backlog FIN-001+).
+**Próximo produto (doc SaaS financeiro):** ver `ROADMAP_FINANCEIRO.md`.
+
+**FIN-001 (categorias despesa/veículo):** implementado — validar no app (detalhe veículo → ícone categorias) após deploy API.
 
 ## Melhorias técnicas (IMP)
 
