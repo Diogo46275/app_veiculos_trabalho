@@ -105,6 +105,7 @@ _Última atualização: 01/06/2026 (FIN-001 validado; FIN-002 implementado)_
 | 31/05/2026 | RF-007b | Diogo | Múltiplas NFs/garantias manutenção; abrir anexos no detalhe |
 | 31/05/2026 | RF-010b | Diogo | Foto de perfil via galeria |
 | 31/05/2026 | RF-011 | Diogo | Múltiplos anexos (máx. 5); upload sequencial; API produção OK; compressão galeria = câmera |
+| 01/06/2026 | FIN-001 | Diogo | Categorias por veículo + seed padrão |
 
 **Escopo mobile principal:** RF-001 a RF-010 ✅ — concluído e validado.
 
